@@ -1,0 +1,132 @@
+<div class="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+  <div>
+    <p class="text-sm text-muted">Overview</p>
+    <h1 class="font-display text-2xl font-semibold tracking-tight sm:text-3xl">
+      {{ auth.user()?.businessName || 'Your workspace' }}
+    </h1>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <a routerLink="/app/invoices" class="btn-primary">New invoice</a>
+    <a routerLink="/app/clients" class="btn-secondary">Add client</a>
+  </div>
+</div>
+
+@if (loading()) {
+  <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    @for (_ of [1,2,3,4]; track $index) {
+      <div class="card h-28 animate-pulse bg-elevated"></div>
+    }
+  </div>
+} @else if (error()) {
+  <div class="card text-danger">{{ error() }}</div>
+} @else if (data()) {
+  <div class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="card">
+      <div class="text-xs font-medium uppercase tracking-wide text-muted">Paid revenue</div>
+      <div class="mt-2 font-mono text-2xl font-semibold tabular-nums">{{ money(data()!.kpis.paidRevenue) }}</div>
+      <div class="mt-1 text-xs text-subtle">Collected to date</div>
+    </div>
+    <div class="card">
+      <div class="text-xs font-medium uppercase tracking-wide text-muted">Outstanding</div>
+      <div class="mt-2 font-mono text-2xl font-semibold tabular-nums">{{ money(data()!.kpis.outstanding) }}</div>
+      <div class="mt-1 text-xs text-subtle">Awaiting payment</div>
+    </div>
+    <div class="card">
+      <div class="text-xs font-medium uppercase tracking-wide text-muted">Overdue</div>
+      <div class="mt-2 font-mono text-2xl font-semibold tabular-nums text-danger">{{ money(data()!.kpis.overdue) }}</div>
+      <div class="mt-1 text-xs text-subtle">Past due invoices</div>
+    </div>
+    <div class="card">
+      <div class="text-xs font-medium uppercase tracking-wide text-muted">Net</div>
+      <div class="mt-2 font-mono text-2xl font-semibold tabular-nums">{{ money(data()!.kpis.net) }}</div>
+      <div class="mt-1 text-xs text-subtle">Revenue − expenses</div>
+    </div>
+  </div>
+
+  <div class="mb-6 grid gap-4 lg:grid-cols-3">
+    <div class="card lg:col-span-2">
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="text-base font-semibold">Cash flow (6 months)</h2>
+        <span class="text-xs text-muted">Revenue vs expenses</span>
+      </div>
+      <div class="h-64">
+        <canvas id="cashflowChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="mb-4 text-base font-semibold">Snapshot</h2>
+      <dl class="space-y-3 text-sm">
+        <div class="flex justify-between gap-3">
+          <dt class="text-muted">Active clients</dt>
+          <dd class="font-medium tabular-nums">{{ data()!.kpis.activeClients }}</dd>
+        </div>
+        <div class="flex justify-between gap-3">
+          <dt class="text-muted">Active projects</dt>
+          <dd class="font-medium tabular-nums">{{ data()!.kpis.activeProjects }}</dd>
+        </div>
+        <div class="flex justify-between gap-3">
+          <dt class="text-muted">Invoices</dt>
+          <dd class="font-medium tabular-nums">{{ data()!.kpis.invoiceCount }}</dd>
+        </div>
+        <div class="flex justify-between gap-3">
+          <dt class="text-muted">Total expenses</dt>
+          <dd class="font-medium tabular-nums">{{ money(data()!.kpis.totalExpenses) }}</dd>
+        </div>
+        <div class="flex justify-between gap-3">
+          <dt class="text-muted">Draft pipeline</dt>
+          <dd class="font-medium tabular-nums">{{ money(data()!.kpis.draftTotal) }}</dd>
+        </div>
+      </dl>
+
+      @if (data()!.expensesByCategory.length) {
+        <div class="mt-6 border-t border-border pt-4">
+          <h3 class="mb-3 text-xs font-medium uppercase tracking-wide text-muted">Top expense categories</h3>
+          <ul class="space-y-2">
+            @for (c of data()!.expensesByCategory.slice(0, 4); track c.category) {
+              <li class="flex justify-between text-sm">
+                <span class="capitalize text-muted">{{ c.category }}</span>
+                <span class="tabular-nums">{{ money(c.amount) }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="mb-4 flex items-center justify-between gap-3">
+      <h2 class="text-base font-semibold">Recent invoices</h2>
+      <a routerLink="/app/invoices" class="text-sm text-muted hover:text-fg">View all</a>
+    </div>
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Number</th>
+            <th>Client</th>
+            <th>Status</th>
+            <th>Due</th>
+            <th class="text-right">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (inv of data()!.recentInvoices; track inv.id) {
+            <tr>
+              <td class="font-medium">
+                <a [routerLink]="['/app/invoices', inv.id]" class="hover:underline">{{ inv.number }}</a>
+              </td>
+              <td>{{ inv.clientName }}</td>
+              <td><span class="badge capitalize" [ngClass]="statusClass(inv.status)">{{ statusLabel(inv.status) }}</span></td>
+              <td class="text-muted">{{ inv.dueDate }}</td>
+              <td class="text-right font-mono tabular-nums">{{ money(inv.total) }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5" class="py-8 text-center text-muted">No invoices yet</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}

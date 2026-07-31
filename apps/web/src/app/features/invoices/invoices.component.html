@@ -1,0 +1,155 @@
+<div class="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+  <div>
+    <p class="text-sm text-muted">Billing</p>
+    <h1 class="font-display text-2xl font-semibold tracking-tight">Invoices</h1>
+  </div>
+  <button type="button" class="btn-primary" (click)="openCreate()">Create invoice</button>
+</div>
+
+<div class="mb-4 flex flex-wrap gap-2">
+  @for (f of ['all', 'draft', 'sent', 'paid', 'overdue', 'void']; track f) {
+    <button
+      type="button"
+      class="rounded-full border px-3 py-1 text-xs capitalize transition"
+      [class.border-accent]="filter() === f"
+      [class.bg-accent]="filter() === f"
+      [class.text-accent-fg]="filter() === f"
+      [class.border-border]="filter() !== f"
+      [class.text-muted]="filter() !== f"
+      (click)="filter.set(f)"
+    >
+      {{ f }}
+    </button>
+  }
+</div>
+
+@if (error()) {
+  <p class="mb-4 rounded-sm bg-elevated text-danger px-3 py-2 text-sm text-danger">{{ error() }}</p>
+}
+
+<div class="table-wrap">
+  <table class="data">
+    <thead>
+      <tr>
+        <th>Number</th>
+        <th>Client</th>
+        <th>Status</th>
+        <th>Issued</th>
+        <th>Due</th>
+        <th class="text-right">Total</th>
+        <th class="text-right">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (loading()) {
+        <tr><td colspan="7" class="py-10 text-center text-muted">Loading…</td></tr>
+      } @else {
+        @for (inv of filtered(); track inv.id) {
+          <tr>
+            <td class="font-medium">
+              <a [routerLink]="['/app/invoices', inv.id]" class="hover:underline">{{ inv.number }}</a>
+            </td>
+            <td>{{ inv.client?.name || '—' }}</td>
+            <td><span class="badge capitalize" [ngClass]="statusClass(inv.status)">{{ statusLabel(inv.status) }}</span></td>
+            <td class="text-muted">{{ inv.issueDate }}</td>
+            <td class="text-muted">{{ inv.dueDate }}</td>
+            <td class="text-right font-mono tabular-nums">{{ money(inv.total) }}</td>
+            <td class="text-right">
+              @if (inv.status === 'draft' || inv.status === 'sent') {
+                <button type="button" class="btn-ghost px-2 py-1 text-xs" (click)="setStatus(inv, 'paid')">Mark paid</button>
+              }
+              @if (inv.status === 'draft') {
+                <button type="button" class="btn-ghost px-2 py-1 text-xs" (click)="setStatus(inv, 'sent')">Send</button>
+              }
+              <button type="button" class="btn-ghost px-2 py-1 text-xs text-danger" (click)="remove(inv)">Delete</button>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="7" class="py-10 text-center text-muted">No invoices match this filter.</td></tr>
+        }
+      }
+    </tbody>
+  </table>
+</div>
+
+@if (showForm()) {
+  <div class="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" (click)="closeForm()">
+    <div class="card max-h-[92vh] w-full max-w-2xl overflow-y-auto shadow-panel" (click)="$event.stopPropagation()">
+      <h2 class="mb-4 text-lg font-semibold">Create invoice</h2>
+      <form class="space-y-4" [formGroup]="form" (ngSubmit)="save()">
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label class="label">Client</label>
+            <select class="input" formControlName="clientId">
+              <option value="" disabled>Select client</option>
+              @for (c of clients(); track c.id) {
+                <option [value]="c.id">{{ c.name }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="label">Status</label>
+            <select class="input" formControlName="status">
+              @for (s of statuses; track s) {
+                <option [value]="s">{{ statusLabel(s) }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="grid gap-3 sm:grid-cols-3">
+          <div>
+            <label class="label">Issue date</label>
+            <input class="input" type="date" formControlName="issueDate" />
+          </div>
+          <div>
+            <label class="label">Due date</label>
+            <input class="input" type="date" formControlName="dueDate" />
+          </div>
+          <div>
+            <label class="label">Tax rate %</label>
+            <input class="input" type="number" formControlName="taxRate" min="0" step="0.01" />
+          </div>
+        </div>
+
+        <div>
+          <div class="mb-2 flex items-center justify-between">
+            <label class="label mb-0">Line items</label>
+            <button type="button" class="btn-ghost text-xs" (click)="addItem()">Add line</button>
+          </div>
+          <div class="space-y-3" formArrayName="items">
+            @for (ctrl of items.controls; track $index; let i = $index) {
+              <div class="grid gap-2 rounded-md border border-border p-3 sm:grid-cols-12" [formGroupName]="i">
+                <div class="sm:col-span-6">
+                  <input class="input" placeholder="Description" formControlName="description" />
+                </div>
+                <div class="sm:col-span-2">
+                  <input class="input" type="number" placeholder="Qty" formControlName="quantity" min="0" step="0.01" />
+                </div>
+                <div class="sm:col-span-3">
+                  <input class="input" type="number" placeholder="Unit price" formControlName="unitPrice" min="0" step="0.01" />
+                </div>
+                <div class="flex items-center sm:col-span-1">
+                  <button type="button" class="btn-ghost px-2 text-danger" (click)="removeItem(i)" [disabled]="items.length === 1">×</button>
+                </div>
+              </div>
+            }
+          </div>
+          <p class="mt-3 text-right text-sm text-muted">
+            Estimated total:
+            <span class="font-mono text-fg tabular-nums">{{ money(previewTotal()) }}</span>
+          </p>
+        </div>
+
+        <div>
+          <label class="label">Notes</label>
+          <textarea class="input min-h-[72px]" formControlName="notes"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" class="btn-secondary" (click)="closeForm()">Cancel</button>
+          <button type="submit" class="btn-primary">Create invoice</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

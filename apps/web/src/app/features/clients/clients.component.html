@@ -1,0 +1,91 @@
+<div class="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+  <div>
+    <p class="text-sm text-muted">CRM</p>
+    <h1 class="font-display text-2xl font-semibold tracking-tight">Clients</h1>
+  </div>
+  <button type="button" class="btn-primary" (click)="openCreate()">Add client</button>
+</div>
+
+<div class="mb-4">
+  <input
+    class="input max-w-md"
+    type="search"
+    placeholder="Search clients…"
+    [value]="query()"
+    (input)="query.set($any($event.target).value)"
+  />
+</div>
+
+@if (error()) {
+  <p class="mb-4 rounded-sm bg-elevated text-danger px-3 py-2 text-sm text-danger">{{ error() }}</p>
+}
+
+<div class="table-wrap">
+  <table class="data">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Company</th>
+        <th>Email</th>
+        <th>Status</th>
+        <th class="text-right">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (loading()) {
+        <tr><td colspan="5" class="py-10 text-center text-muted">Loading…</td></tr>
+      } @else {
+        @for (c of filtered(); track c.id) {
+          <tr>
+            <td class="font-medium">{{ c.name }}</td>
+            <td class="text-muted">{{ c.company || '—' }}</td>
+            <td class="text-muted">{{ c.email || '—' }}</td>
+            <td><span class="badge capitalize" [ngClass]="statusClass(c.status)">{{ statusLabel(c.status) }}</span></td>
+            <td class="text-right">
+              <button type="button" class="btn-ghost px-2 py-1 text-xs" (click)="openEdit(c)">Edit</button>
+              <button type="button" class="btn-ghost px-2 py-1 text-xs text-danger" (click)="remove(c)">Delete</button>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="5" class="py-10 text-center text-muted">No clients yet. Add your first client.</td></tr>
+        }
+      }
+    </tbody>
+  </table>
+</div>
+
+@if (showForm()) {
+  <div class="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" (click)="closeForm()">
+    <div class="card w-full max-w-lg shadow-panel" (click)="$event.stopPropagation()">
+      <h2 class="mb-4 text-lg font-semibold">{{ editing() ? 'Edit client' : 'New client' }}</h2>
+      <form class="space-y-3" [formGroup]="form" (ngSubmit)="save()">
+        <div>
+          <label class="label">Name</label>
+          <input class="input" formControlName="name" />
+        </div>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label class="label">Email</label>
+            <input class="input" type="email" formControlName="email" />
+          </div>
+          <div>
+            <label class="label">Phone</label>
+            <input class="input" formControlName="phone" />
+          </div>
+        </div>
+        <div>
+          <label class="label">Company</label>
+          <input class="input" formControlName="company" />
+        </div>
+        <div>
+          <label class="label">Notes</label>
+          <textarea class="input min-h-[88px]" formControlName="notes"></textarea>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" class="btn-secondary" (click)="closeForm()">Cancel</button>
+          <button type="submit" class="btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

@@ -1,0 +1,113 @@
+<div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between print:hidden">
+  <a routerLink="/app/invoices" class="text-sm text-muted hover:text-fg">← Back to invoices</a>
+  <div class="flex flex-wrap gap-2">
+    @if (invoice()) {
+      @if (invoice()!.status === 'draft') {
+        <button type="button" class="btn-secondary" (click)="setStatus('sent')">Mark sent</button>
+      }
+      @if (invoice()!.status === 'draft' || invoice()!.status === 'sent' || invoice()!.status === 'overdue') {
+        <button type="button" class="btn-primary" (click)="setStatus('paid')">Mark paid</button>
+      }
+    }
+    <button type="button" class="btn-secondary" (click)="print()">Print / PDF</button>
+  </div>
+</div>
+
+@if (loading()) {
+  <div class="card h-64 animate-pulse bg-elevated"></div>
+} @else if (error()) {
+  <div class="card text-danger">{{ error() }}</div>
+} @else if (invoice()) {
+  <article class="card mx-auto max-w-3xl print:border-0 print:shadow-none">
+    <header class="mb-8 flex flex-col gap-6 border-b border-border pb-6 sm:flex-row sm:justify-between">
+      <div>
+        <div class="text-xs uppercase tracking-wide text-muted">Invoice</div>
+        <h1 class="mt-1 font-display text-2xl font-semibold tracking-tight">{{ invoice()!.number }}</h1>
+        <span class="badge mt-2 capitalize" [ngClass]="statusClass(invoice()!.status)">
+          {{ statusLabel(invoice()!.status) }}
+        </span>
+      </div>
+      <div class="text-sm sm:text-right">
+        <div class="font-semibold">{{ auth.user()?.businessName }}</div>
+        <div class="text-muted">{{ auth.user()?.name }}</div>
+        <div class="text-muted">{{ auth.user()?.email }}</div>
+      </div>
+    </header>
+
+    <div class="mb-8 grid gap-6 sm:grid-cols-2">
+      <div>
+        <div class="text-xs uppercase tracking-wide text-muted">Bill to</div>
+        <div class="mt-1 font-medium">{{ invoice()!.client?.name }}</div>
+        @if (invoice()!.client?.company) {
+          <div class="text-sm text-muted">{{ invoice()!.client?.company }}</div>
+        }
+        @if (invoice()!.client?.email) {
+          <div class="text-sm text-muted">{{ invoice()!.client?.email }}</div>
+        }
+      </div>
+      <div class="grid grid-cols-2 gap-3 text-sm sm:text-right">
+        <div>
+          <div class="text-xs text-muted">Issue date</div>
+          <div>{{ invoice()!.issueDate }}</div>
+        </div>
+        <div>
+          <div class="text-xs text-muted">Due date</div>
+          <div>{{ invoice()!.dueDate }}</div>
+        </div>
+        @if (invoice()!.paidAt) {
+          <div class="sm:col-span-2">
+            <div class="text-xs text-muted">Paid on</div>
+            <div>{{ invoice()!.paidAt }}</div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th class="text-right">Qty</th>
+            <th class="text-right">Rate</th>
+            <th class="text-right">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of invoice()!.items; track $index) {
+            <tr>
+              <td>{{ item.description }}</td>
+              <td class="text-right tabular-nums">{{ item.quantity }}</td>
+              <td class="text-right font-mono tabular-nums">{{ money(item.unitPrice) }}</td>
+              <td class="text-right font-mono tabular-nums">{{ money(item.amount || item.quantity * item.unitPrice) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-6 flex justify-end">
+      <dl class="w-full max-w-xs space-y-2 text-sm">
+        <div class="flex justify-between">
+          <dt class="text-muted">Subtotal</dt>
+          <dd class="font-mono tabular-nums">{{ money(invoice()!.subtotal) }}</dd>
+        </div>
+        <div class="flex justify-between">
+          <dt class="text-muted">Tax ({{ invoice()!.taxRate }}%)</dt>
+          <dd class="font-mono tabular-nums">{{ money(invoice()!.taxAmount) }}</dd>
+        </div>
+        <div class="flex justify-between border-t border-border pt-2 text-base font-semibold">
+          <dt>Total</dt>
+          <dd class="font-mono tabular-nums">{{ money(invoice()!.total) }}</dd>
+        </div>
+      </dl>
+    </div>
+
+    @if (invoice()!.notes) {
+      <div class="mt-8 border-t border-border pt-4 text-sm text-muted">
+        <div class="mb-1 text-xs uppercase tracking-wide">Notes</div>
+        {{ invoice()!.notes }}
+      </div>
+    }
+  </article>
+}

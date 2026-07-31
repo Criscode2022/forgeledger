@@ -1,0 +1,61 @@
+<div class="min-h-screen bg-bg text-fg lg:flex">
+  <!-- Mobile top bar -->
+  <header class="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-bg px-4 py-3 backdrop-blur lg:hidden">
+    <div class="flex items-center gap-2">
+      <div class="flex h-8 w-8 items-center justify-center rounded-sm bg-accent text-accent-fg text-sm font-semibold">F</div>
+      <span class="font-display text-base font-semibold tracking-tight">ForgeLedger</span>
+    </div>
+    <button type="button" class="btn-ghost px-3" (click)="toggleMenu()" [attr.aria-expanded]="menuOpen()">
+      {{ menuOpen() ? 'Close' : 'Menu' }}
+    </button>
+  </header>
+
+  <!-- Sidebar -->
+  <aside
+    class="fixed inset-y-0 left-0 z-40 w-72 border-r border-border bg-surface p-5 transition-transform duration-200 lg:static lg:translate-x-0"
+    [class.-translate-x-full]="!menuOpen()"
+    [class.translate-x-0]="menuOpen()"
+  >
+    <div class="mb-8 hidden items-center gap-3 lg:flex">
+      <div class="flex h-9 w-9 items-center justify-center rounded-sm bg-accent text-accent-fg text-sm font-semibold">F</div>
+      <div>
+        <div class="font-display text-base font-semibold tracking-tight">ForgeLedger</div>
+        <div class="text-xs text-muted">Business finance OS</div>
+      </div>
+    </div>
+
+    <nav class="space-y-1">
+      @for (item of nav; track item.path) {
+        <a
+          [routerLink]="item.path"
+          routerLinkActive="nav-active"
+          [routerLinkActiveOptions]="{ exact: item.exact }"
+          class="nav-link"
+          (click)="closeMenu()"
+        >
+          {{ item.label }}
+        </a>
+      }
+    </nav>
+
+    <div class="absolute bottom-0 left-0 right-0 border-t border-border p-5">
+      @if (auth.user(); as user) {
+        <div class="mb-3">
+          <div class="truncate text-sm font-medium">{{ user.name }}</div>
+          <div class="truncate text-xs text-muted">{{ user.businessName }}</div>
+        </div>
+      }
+      <button type="button" class="btn-secondary w-full" (click)="logout()">Sign out</button>
+    </div>
+  </aside>
+
+  @if (menuOpen()) {
+    <div class="fixed inset-0 z-30 bg-black/50 lg:hidden" (click)="closeMenu()"></div>
+  }
+
+  <main class="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+    <div class="mx-auto max-w-6xl">
+      <router-outlet />
+    </div>
+  </main>
+</div>

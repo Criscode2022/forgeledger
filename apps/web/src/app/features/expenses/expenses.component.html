@@ -1,0 +1,92 @@
+<div class="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+  <div>
+    <p class="text-sm text-muted">Spend</p>
+    <h1 class="font-display text-2xl font-semibold tracking-tight">Expenses</h1>
+    <p class="mt-1 text-sm text-muted">Total: <span class="font-mono text-fg tabular-nums">{{ money(total()) }}</span></p>
+  </div>
+  <button type="button" class="btn-primary" (click)="openCreate()">Add expense</button>
+</div>
+
+@if (error()) {
+  <p class="mb-4 rounded-sm bg-elevated text-danger px-3 py-2 text-sm text-danger">{{ error() }}</p>
+}
+
+<div class="table-wrap">
+  <table class="data">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Category</th>
+        <th>Date</th>
+        <th>Billable</th>
+        <th class="text-right">Amount</th>
+        <th class="text-right">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (loading()) {
+        <tr><td colspan="6" class="py-10 text-center text-muted">Loading…</td></tr>
+      } @else {
+        @for (e of expenses(); track e.id) {
+          <tr>
+            <td class="font-medium">{{ e.title }}</td>
+            <td class="capitalize text-muted">{{ e.category }}</td>
+            <td class="text-muted">{{ e.date }}</td>
+            <td>{{ e.billable ? 'Yes' : 'No' }}</td>
+            <td class="text-right font-mono tabular-nums">{{ money(e.amount) }}</td>
+            <td class="text-right">
+              <button type="button" class="btn-ghost px-2 py-1 text-xs" (click)="openEdit(e)">Edit</button>
+              <button type="button" class="btn-ghost px-2 py-1 text-xs text-danger" (click)="remove(e)">Delete</button>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="py-10 text-center text-muted">No expenses recorded.</td></tr>
+        }
+      }
+    </tbody>
+  </table>
+</div>
+
+@if (showForm()) {
+  <div class="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" (click)="closeForm()">
+    <div class="card w-full max-w-lg shadow-panel" (click)="$event.stopPropagation()">
+      <h2 class="mb-4 text-lg font-semibold">{{ editing() ? 'Edit expense' : 'New expense' }}</h2>
+      <form class="space-y-3" [formGroup]="form" (ngSubmit)="save()">
+        <div>
+          <label class="label">Title</label>
+          <input class="input" formControlName="title" />
+        </div>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label class="label">Category</label>
+            <select class="input" formControlName="category">
+              @for (c of categories; track c) {
+                <option [value]="c">{{ c }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="label">Amount</label>
+            <input class="input" type="number" formControlName="amount" min="0" step="0.01" />
+          </div>
+        </div>
+        <div>
+          <label class="label">Date</label>
+          <input class="input" type="date" formControlName="date" />
+        </div>
+        <div>
+          <label class="label">Notes</label>
+          <textarea class="input min-h-[72px]" formControlName="notes"></textarea>
+        </div>
+        <label class="flex items-center gap-2 text-sm">
+          <input type="checkbox" formControlName="billable" class="h-4 w-4" />
+          Billable to client
+        </label>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" class="btn-secondary" (click)="closeForm()">Cancel</button>
+          <button type="submit" class="btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

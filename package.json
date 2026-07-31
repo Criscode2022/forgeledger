@@ -1,0 +1,31 @@
+{
+  "name": "forgeledger",
+  "private": true,
+  "version": "1.0.0",
+  "description": "ForgeLedger — freelance & SMB finance OS (Angular + NestJS + Neon + Tailwind)",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=@forgeledger/api",
+    "dev:api": "npm run dev --workspace=@forgeledger/api",
+    "dev:web": "npm run start --workspace=@forgeledger/web",
+    "build": "npm run build --workspace=@forgeledger/web && npm run build --workspace=@forgeledger/api",
+    "build:api": "npm run build --workspace=@forgeledger/api",
+    "build:web": "npm run build --workspace=@forgeledger/web",
+    "start": "npm run start:prod --workspace=@forgeledger/api",
+    "typecheck": "npm run build --workspace=@forgeledger/api",
+    "test": "npm run test --workspace=@forgeledger/api -- --passWithNoTests",
+    "seed": "npm run seed --workspace=@forgeledger/api"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "overrides": {
+    "rxjs": "7.8.2"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1"
+  }
+}

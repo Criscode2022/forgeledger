@@ -1,0 +1,153 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0a0a0b;
+  --surface: #121214;
+  --elevated: #1a1a1e;
+  --fg: #f4f4f5;
+  --muted: #a1a1aa;
+  --subtle: #71717a;
+  --border: rgba(244, 244, 245, 0.1);
+  --accent: #d4d4d8;
+  --accent-fg: #0a0a0b;
+  --success: #4ade80;
+  --warn: #fbbf24;
+  --danger: #f87171;
+  --font-sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-display: "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --motion-quick: 150ms;
+  --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-sm px-4 py-2.5 text-sm font-medium;
+    transition-property: opacity, transform, background-color, border-color, color;
+    transition-duration: var(--motion-quick);
+    transition-timing-function: var(--ease-smooth);
+  }
+
+  .btn:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  .btn:disabled {
+    @apply cursor-not-allowed opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn bg-accent text-accent-fg hover:opacity-90;
+  }
+
+  .btn-secondary {
+    @apply btn border border-border bg-elevated text-fg hover:bg-surface;
+  }
+
+  .btn-ghost {
+    @apply btn text-muted hover:bg-elevated hover:text-fg;
+  }
+
+  .btn-danger {
+    @apply btn text-danger;
+    background: rgba(248, 113, 113, 0.15);
+  }
+
+  .btn-danger:hover {
+    background: rgba(248, 113, 113, 0.25);
+  }
+
+  .input {
+    @apply w-full rounded-sm border border-border bg-bg px-3 py-2.5 text-sm text-fg outline-none placeholder:text-subtle;
+    transition: border-color var(--motion-quick) var(--ease-smooth), box-shadow var(--motion-quick) var(--ease-smooth);
+  }
+
+  .input:focus {
+    border-color: rgba(244, 244, 245, 0.35);
+    box-shadow: 0 0 0 3px rgba(244, 244, 245, 0.08);
+  }
+
+  .label {
+    @apply mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted;
+  }
+
+  .card {
+    @apply rounded-lg border border-border bg-surface p-5;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  .table-wrap {
+    @apply overflow-x-auto rounded-lg border border-border;
+  }
+
+  table.data {
+    @apply w-full min-w-[640px] text-left text-sm;
+  }
+
+  table.data th {
+    @apply border-b border-border bg-elevated px-4 py-3 text-xs font-medium uppercase tracking-wide text-muted;
+  }
+
+  table.data td {
+    @apply border-b border-border px-4 py-3 align-middle;
+  }
+
+  table.data tr:last-child td {
+    @apply border-b-0;
+  }
+
+  table.data tbody tr {
+    transition: background-color var(--motion-quick) var(--ease-smooth);
+  }
+
+  table.data tbody tr:hover {
+    background: rgba(244, 244, 245, 0.03);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
