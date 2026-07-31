@@ -117,6 +117,33 @@ npm run dev:api      # Nest watch mode
 npm run test         # unit tests (workspaces)
 ```
 
+## Deploy
+
+### Option A — Docker (recommended for full stack)
+
+```bash
+docker compose up --build
+# or
+docker build -t forgeledger .
+docker run -p 8080:8080 -e JWT_SECRET=… -e DATABASE_URL=… forgeledger
+```
+
+### Option B — Render / Fly.io
+
+- **Render**: connect this repo and use `render.yaml` (Docker runtime). Set `DATABASE_URL` to your Neon connection string.
+- **Fly.io**: `fly launch` using `fly.toml`, then `fly secrets set DATABASE_URL=… JWT_SECRET=…`
+
+### Option C — Neon
+
+1. Create a free database at [neon.tech](https://neon.tech)
+2. Copy the pooled connection string (`sslmode=require`)
+3. Set `DATABASE_URL` + `JWT_SECRET` on your host
+4. Start the app — schema sync + demo seed run automatically
+
+### GitHub
+
+Repository: https://github.com/Criscode2022/forgeledger
+
 ## Production notes
 
 - Set a strong `JWT_SECRET`
